@@ -1,8 +1,15 @@
 rules:
 
   # Disallow print statements
-  - id: no-prints
+  - id: python.custom-credit-group.no-prints
     pattern: print(...)
     message: Do not use print statements
     languages: [python]
     severity: INFO
+
+  # Disallow usage of the `requests` library
+  - id: python.custom-credit-group.no-requests-library
+    pattern: requests\.
+    message: Do not use the `requests` library. Use `RequestClient` instead
+    languages: [python]
+    severity: WARNING
