@@ -1,0 +1,8 @@
+rules:
+
+  # Disallow print statements
+  - id: no-prints
+    pattern: print(...)
+    message: Do not use print statements
+    languages: [python]
+    severity: INFO

@@ -1,0 +1,12 @@
+# IDEs
+.project
+.pydevproject
+.idea
+.vscode
+.settings
+.DS_Store
+out.xml
+
+# Random files
+*~
+\#*
