@@ -2,14 +2,34 @@ rules:
 
   # Disallow print statements
   - id: python.custom-credit-group.no-prints
-    pattern: print(...)
     message: Do not use print statements
     languages: [python]
     severity: INFO
+    pattern: print(...)
 
   # Disallow usage of the `requests` library
   - id: python.custom-credit-group.no-requests-library
-    pattern: requests\.
     message: Do not use the `requests` library. Use `RequestClient` instead
     languages: [python]
-    severity: WARNING
+    severity: ERROR
+    pattern-either:
+      - pattern: requests.put(...)
+      - pattern: requests.patch(...)
+      - pattern: requests.delete(...)
+      - pattern: requests.head(...)
+      - pattern: requests.options(...)
+      - pattern: requests.request(...)
+      - pattern: requests.get(...)
+      - pattern: requests.post(...)
+
+  # Enforce setting `related_name` in Foreign Keys
+  - id: python.custom-credit-group.foreign-key-must-set-related-name
+    message: ForeignKey relationships must explicitly set the `related_name` property as `<model>_<field>_set`
+    languages: [python]
+    severity: ERROR
+    patterns:
+    - pattern-inside: |
+        class $M(...):
+          ...
+    - pattern-not: $F = django.db.models.ForeignKey(..., related_name=..., ...)
+    - pattern: $F = django.db.models.ForeignKey(...)
