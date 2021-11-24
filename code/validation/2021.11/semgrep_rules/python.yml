@@ -1,35 +1,54 @@
 rules:
 
-  # Disallow print statements
-  - id: python.custom-credit-group.no-prints
-    message: Do not use print statements
-    languages: [python]
-    severity: INFO
-    pattern: print(...)
+# Disallow print statements
+- id: python.custom-credit-group.no-prints
+  message: Do not use print statements.
+  languages: [python]
+  severity: INFO
+  pattern: print(...)
 
-  # Disallow usage of the `requests` library
-  - id: python.custom-credit-group.no-requests-library
-    message: Do not use the `requests` library. Use `RequestClient` instead
-    languages: [python]
-    severity: ERROR
-    pattern-either:
-      - pattern: requests.put(...)
-      - pattern: requests.patch(...)
-      - pattern: requests.delete(...)
-      - pattern: requests.head(...)
-      - pattern: requests.options(...)
-      - pattern: requests.request(...)
-      - pattern: requests.get(...)
-      - pattern: requests.post(...)
-
-  # Enforce setting `related_name` in Foreign Keys
-  - id: python.custom-credit-group.foreign-key-must-set-related-name
-    message: ForeignKey relationships must explicitly set the `related_name` property as `<model>_<field>_set`
-    languages: [python]
-    severity: ERROR
-    patterns:
+# Disallow redefining a loop variable inside the loop
+- id: python.custom-credit-group.no-redefinition-inside-loop
+  message: Do not redefine loop variables inside the loop.
+  languages: [python]
+  severity: WARNING
+  patterns:
     - pattern-inside: |
-        class $M(...):
-          ...
-    - pattern-not: $F = django.db.models.ForeignKey(..., related_name=..., ...)
-    - pattern: $F = django.db.models.ForeignKey(...)
+        for $I in $L:
+            ...
+    - pattern: $I = ...
+
+# Disallow making changes to an iterable while iterating it
+- id: python.custom-credit-group.no-iterable-updates-inside-loop
+  message: Do not update/change an iterable while iterating it.
+  languages: [python]
+  severity: ERROR
+  patterns:
+    - pattern-inside: |
+        for $I in $L:
+            ...
+    - pattern: $L[...] = ...
+
+# Disallow usage of the `requests` library
+- id: python.custom-credit-group.no-requests-library
+  message: Do not use the `requests` library. Use `RequestClient` instead.
+  languages: [python]
+  severity: ERROR
+  pattern-either:
+    - pattern: requests
+
+# Enforce setting `related_name` in Foreign Keys and Many2Many relations
+- id: python.custom-credit-group.foreign-key-and-many2many-must-set-related-name
+  message: ForeignKey and ManyToMany relationships must explicitly set the "related_name" property as
+    "<model>_<field>_set".
+  languages: [python]
+  severity: ERROR
+  patterns:
+  - pattern-inside: |
+      class $M(...):
+        ...
+  - pattern-either:
+      - pattern: $F = django.db.models.ForeignKey(...)
+      - pattern: $F = django.db.models.ManyToManyField(...)
+  - pattern-not: $F = django.db.models.ForeignKey(..., related_name=..., ...)
+  - pattern-not: $F = django.db.models.ManyToManyField(..., related_name=..., ...)
