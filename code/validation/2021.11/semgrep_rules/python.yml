@@ -38,6 +38,7 @@ rules:
     - pattern: requests
 
 # Enforce setting `related_name` in Foreign Keys and Many2Many relations
+# TODO: would be awesome to be able to enforce the correct format too!
 - id: python.custom-credit-group.foreign-key-and-many2many-must-set-related-name
   message: ForeignKey and ManyToMany relationships must explicitly set the "related_name" property as
     "<model>_<field>_set".
@@ -52,3 +53,64 @@ rules:
       - pattern: $F = django.db.models.ManyToManyField(...)
   - pattern-not: $F = django.db.models.ForeignKey(..., related_name=..., ...)
   - pattern-not: $F = django.db.models.ManyToManyField(..., related_name=..., ...)
+
+# Replaces python.django.performance.access-foreign-keys.access-foreign-keys in order to allow "request.user.id"
+- id: python.custom-credit-group.access-foreign-keys
+  message: You should use ITEM.user_id rather than ITEM.user.id to prevent running
+    an extra query.
+  languages: [python]
+  severity: WARNING
+  patterns:
+  - pattern: $X.user.id
+  - pattern-not: request.user.id
+
+# Replaces python.lang.best-practice.unspecified-open-encoding.unspecified-open-encoding to allow variables instead of only strings in the encoding field
+- id: python.custom-credit-group.unspecified-open-encoding
+  message: Missing 'encoding' parameter. 'open()' uses device locale encodings by
+    default, corrupting files with special characters. Specify the encoding to ensure
+    cross-platform support when opening files in text mode (e.g. encoding="utf-8").
+  languages: [python]
+  severity: WARNING
+  patterns:
+  - pattern-inside: open(...)
+  - pattern-not: open(..., encoding=..., ...)
+  - pattern-not: open($F, "...", $B, "...", ...)
+  - pattern-either:
+    - pattern: open($FILE)
+    - patterns:
+      - pattern: open($FILE, ...)
+      - pattern-not: open($FILE, $M, ...)
+      - pattern-not-regex: open\(.*(?:encoding|mode)=.*\)
+    - patterns:
+      - pattern: open($FILE, $MODE, ...)
+      - metavariable-regex:
+          metavariable: $MODE
+          regex: (?!.*b.*)
+    - patterns:
+      - pattern: open($FILE, ..., mode=$MODE, ...)
+      - metavariable-regex:
+          metavariable: $MODE
+          regex: (?!.*b.*)
+
+# Replaces python.django.correctness.nontext-field-must-set-null-true.nontext-field-must-set-null-true to allow PhoneNumberFields to work
+- id: python.custom-credit-group.nontext-field-must-set-null-true
+  message: null=True should be set if blank=True is set on non-text fields.
+  languages: [python]
+  severity: ERROR
+  patterns:
+  - pattern-inside: |
+      class $M(...):
+        ...
+  - pattern-not: $F = django.db.models.CharField(...)
+  - pattern-not: $F = django.db.models.TextField(...)
+  - pattern-not: $F = django.db.models.SlugField(...)
+  - pattern-not: $F = django.db.models.EmailField(...)
+  - pattern-not: $F = django.db.models.FileField(...)
+  - pattern-not: $F = django.db.models.ImageField(...)
+  - pattern-not: $F = django.db.models.URLField(...)
+  - pattern-not: $F = django.db.models.UUIDField(...)
+  - pattern-not: $F = django.db.models.ManyToManyField(...)
+  - pattern-not: $F = django.db.models.NullBooleanField(...)
+  - pattern-not: $F = PhoneNumberField(...)
+  - pattern-not: $F = $X(..., null=True, blank=True, ...)
+  - pattern: $F = $X(..., blank=True, ...)
